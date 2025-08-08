@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oregon Facilities Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        
+        .info-panel {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .legend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #2563eb;
+            border: 2px solid #1e40af;
+        }
+        
+        .stats {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+        
+        /* Custom tooltip styles */
+        .leaflet-tooltip {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .leaflet-tooltip-top:before {
+            border-top-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .leaflet-tooltip-bottom:before {
+            border-bottom-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .leaflet-tooltip-left:before {
+            border-left-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .leaflet-tooltip-right:before {
+            border-right-color: rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Oregon Facilities Map</h1>
+            <p>Interactive map showing facility locations across Oregon</p>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div class="info-panel">
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot"></div>
+                    <span>Facility Locations</span>
+                </div>
+            </div>
+            <div class="stats">
+                Hover over the blue dots to see facility names and locations
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Facility data with coordinates
+        const facilities = [
+            {
+                "supplier": "Baker Sanitary Service",
+                "location": "Baker City",
+                "amount": "25,100.40",
+                "lat": 44.7749,
+                "lng": -117.8344
+            },
+            {
+                "supplier": "Recology/Western Oregon Waste",
+                "location": "Astoria",
+                "amount": "3,250.00",
+                "lat": 46.1879,
+                "lng": -123.8313
+            },
+            {
+                "supplier": "Roseburg Disposal",
+                "location": "Roseburg",
+                "amount": "12,649.00",
+                "lat": 43.2165,
+                "lng": -123.3417
+            },
+            {
+                "supplier": "Sutherlin Sanitary",
+                "location": "Sutherlin",
+                "amount": "6,380.40",
+                "lat": 43.3851,
+                "lng": -123.312
+            },
+            {
+                "supplier": "Clark's Disposal",
+                "location": "John Day",
+                "amount": "2,737.80",
+                "lat": 44.4165,
+                "lng": -118.953
+            },
+            {
+                "supplier": "Rimrock Recycling",
+                "location": "Hines/Burns",
+                "amount": "1,983.80",
+                "lat": 43.5621,
+                "lng": -119.0808
+            },
+            {
+                "supplier": "Recology/Ashland Disposal",
+                "location": "Ashland/Phoenix",
+                "amount": "-",
+                "lat": 42.1946,
+                "lng": -122.7095
+            },
+            {
+                "supplier": "Madras Sanitary",
+                "location": "Madras",
+                "amount": "7,030.40",
+                "lat": 44.6332,
+                "lng": -121.1297
+            },
+            {
+                "supplier": "So. Oregon Sanitation",
+                "location": "Grants Pass",
+                "amount": "-",
+                "lat": 42.439,
+                "lng": -123.3307
+            },
+            {
+                "supplier": "Lakeview Sanitation",
+                "location": "Lakeview",
+                "amount": "14,024.40",
+                "lat": 42.1887,
+                "lng": -120.3458
+            },
+            {
+                "supplier": "Apex Disposal",
+                "location": "Eugene",
+                "amount": "-",
+                "lat": 44.0521,
+                "lng": -123.0868
+            },
+            {
+                "supplier": "North Lincoln Sanitation",
+                "location": "Lincoln City",
+                "amount": "3,088.80",
+                "lat": 44.9582,
+                "lng": -124.0179
+            },
+            {
+                "supplier": "Thompson's Sanitary",
+                "location": "Newport",
+                "amount": "12,412.40",
+                "lat": 44.6365,
+                "lng": -124.0533
+            },
+            {
+                "supplier": "Dahl Disposal",
+                "location": "Toledo",
+                "amount": "5,036.20",
+                "lat": 44.6129,
+                "lng": -123.9368
+            }
+        ];
+
+        // Initialize the map centered on Oregon
+        const map = L.map('map').setView([44.0521, -120.5], 7);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
+
+        // Add facility markers
+        facilities.forEach(facility => {
+            // Create a blue circle marker
+            const marker = L.circleMarker([facility.lat, facility.lng], {
+                radius: 8,
+                fillColor: '#2563eb',
+                color: '#1e40af',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+
+            // Create tooltip content
+            const tooltipContent = `
+                <strong>${facility.supplier}</strong><br>
+                📍 ${facility.location}<br>
+                ${facility.amount !== '-' ? '💰 $' + facility.amount : ''}
+            `;
+
+            // Bind tooltip that shows on hover
+            marker.bindTooltip(tooltipContent, {
+                permanent: false,
+                direction: 'top',
+                offset: [0, -10],
+                className: 'custom-tooltip'
+            });
+
+            // Add hover effects
+            marker.on('mouseover', function(e) {
+                this.setStyle({
+                    radius: 10,
+                    fillOpacity: 1
+                });
+            });
+
+            marker.on('mouseout', function(e) {
+                this.setStyle({
+                    radius: 8,
+                    fillOpacity: 0.8
+                });
+            });
+        });
+
+        // Fit map to show all markers
+        const group = new L.featureGroup(map._layers);
+        if (Object.keys(group._layers).length > 0) {
+            map.fitBounds(group.getBounds().pad(0.1));
+        }
+    </script>
+</body>
+</html>
+
